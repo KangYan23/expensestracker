@@ -121,6 +121,15 @@ export default function ExpenseForm({ onSubmit }) {
           value={form.note}
           onChange={(e) => setForm({ ...form, note: e.target.value })}
         />
+        <TextInput
+          label="Title"
+          placeholder="e.g. Lunch, Grab ride"
+          required
+          radius="md"
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+          error={!!errors.title}
+        />
 
         <Group grow>
           <NumberInput
