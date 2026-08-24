@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: expense-tracker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: expense-backend:latest   # Built from ./backend/Dockerfile
+          imagePullPolicy: IfNotPresent   # Use local image if available
+          ports:
+            - containerPort: 5000
+          env:
+            - name: PORT
+              value: "5000"
+            - name: NEXT_PUBLIC_MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: expense-secrets
+                  key: MONGO_URI
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: expense-tracker
+spec:
+  selector:
+    app: backend
+  type: ClusterIP
+  ports:
+    - port: 5000
+      targetPort: 5000

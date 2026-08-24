@@ -12,6 +12,7 @@ services:
   backend:
     build:
       context: ./backend
+    image: expense-backend:latest   # must match k8s/backend-deployment.yaml
     container_name: expense_backend
     ports:
       - "5000:5000"
@@ -25,6 +26,7 @@ services:
   frontend:
     build:
       context: ./frontend
+    image: expense-frontend:latest   # must match k8s/frontend-deployment.yaml
     container_name: expense_frontend
     ports:
       - "3000:3000"
