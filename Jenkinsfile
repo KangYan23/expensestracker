@@ -36,6 +36,7 @@ pipeline {
     stage('Build & Lint') {
       steps {
         sh 'cd backend && node --check index.js'
+        sh 'cd backend && npm run lint'
         sh 'cd frontend && npm run lint'
         // Uncomment for a full production build check (slower):
         // sh 'cd frontend && npm run build'
@@ -54,6 +55,17 @@ pipeline {
 
           def totalHigh = 0
           def totalCritical = 0
+
+          // severity -> rank, for sorting worst-first
+          def sevRank = { s ->
+            switch (s?.toLowerCase()) {
+              case 'critical': return 4
+              case 'high':     return 3
+              case 'moderate': return 2
+              case 'low':      return 1
+              default:         return 0
+            }
+          }
 
           ['backend', 'frontend'].each { svc ->
             // `npm audit --json` exits 1 when vulns exist; capture the JSON either way.
@@ -88,14 +100,49 @@ pipeline {
             totalHigh += high
             totalCritical += critical
 
-            rows << "${svc}: ${total} vulnerable dep(s) — info=${info} low=${low} moderate=${moderate} high=${high} critical=${critical}"
+            rows << ''
+            rows << "== ${svc}: ${total} vulnerable dep(s) — info=${info} low=${low} moderate=${moderate} high=${high} critical=${critical} =="
+
+            // Per-vulnerability suggestions: package + severity + advisory + fix
+            def vulns = parsed?.vulnerabilities
+            if (vulns != null && total > 0) {
+              def entries = []
+              vulns.each { name, vuln -> entries << [name, vuln] }
+              entries = entries.sort { a, b -> (sevRank(b[1]?.severity) <=> sevRank(a[1]?.severity)) }
+
+              entries.each { e ->
+                def name = e[0]
+                def vuln = e[1]
+                def sev = vuln?.severity ?: 'unknown'
+                def direct = (vuln?.isDirect == true) ? 'direct' : 'transitive'
+                def fixText = vuln?.fixAvailable
+                  ? 'FIX AVAILABLE → run `npm audit fix` in this service'
+                  : 'no auto-fix → review advisory below'
+                rows << "  [${sev.toUpperCase()}] ${name} (${direct}): ${fixText}"
+
+                def via = vuln?.via
+                if (via instanceof List) {
+                  via.each { adv ->
+                    if (adv instanceof Map && adv?.title) {
+                      rows << "      • ${adv.title}"
+                      if (adv?.url) rows << "        ${adv.url}"
+                    } else if (adv instanceof String) {
+                      rows << "      • introduced via ${adv}"
+                    }
+                  }
+                }
+              }
+            }
           }
 
           rows << ''
           if (totalHigh > 0 || totalCritical > 0) {
             rows << "ACTION REQUIRED: ${totalHigh} high / ${totalCritical} critical vulnerabilities found."
+            rows << 'SUGGESTION: run `npm audit fix` (non-breaking) in the affected service(s), commit the'
+            rows << '           lockfile change, and re-push. For breaking fixes, run `npm audit fix --force`,'
+            rows << '           review the changes, then commit.'
           } else {
-            rows << 'No high or critical vulnerabilities found.'
+            rows << 'No high or critical vulnerabilities found. ✅'
           }
 
           writeFile file: "${REPORT_DIR}/security-summary.txt", text: rows.join('\n') + '\n'
