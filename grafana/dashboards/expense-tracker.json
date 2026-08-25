@@ -1,0 +1,286 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "HTTP Requests / sec",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "fillOpacity": 15, "drawStyle": "line", "lineWidth": 2, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{job=\"expense-backend\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "requests/s"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Request Duration (p95)",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": { "fillOpacity": 15, "drawStyle": "line", "lineWidth": 2, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"expense-backend\"}[5m])) by (le))",
+          "refId": "A",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Requests / sec by Route",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "fillOpacity": 15, "drawStyle": "line", "lineWidth": 2, "showPoints": "never", "stacking": { "mode": "normal" } }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum by (route) (rate(http_requests_total{job=\"expense-backend\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{route}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Backend CPU (cores)",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "fillOpacity": 15, "drawStyle": "line", "lineWidth": 2, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "rate(process_cpu_seconds_total{job=\"expense-backend\"}[5m])",
+          "refId": "A",
+          "legendFormat": "CPU"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Backend Memory (RSS)",
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "fillOpacity": 15, "drawStyle": "line", "lineWidth": 2, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "process_resident_memory_bytes{job=\"expense-backend\"}",
+          "refId": "A",
+          "legendFormat": "RSS"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Node Heap Used",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "fillOpacity": 15, "drawStyle": "line", "lineWidth": 2, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "nodejs_heap_size_used_bytes{job=\"expense-backend\"}",
+          "refId": "A",
+          "legendFormat": "heap used"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Event Loop Lag",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": { "fillOpacity": 15, "drawStyle": "line", "lineWidth": 2, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "nodejs_eventloop_lag_seconds{job=\"expense-backend\"}",
+          "refId": "A",
+          "legendFormat": "lag"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "MongoDB Up",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bool",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] },
+          "mappings": [{ "type": "value", "options": { "1": { "text": "UP", "color": "green" }, "0": { "text": "DOWN", "color": "red" } } }]
+        },
+        "overrides": []
+      },
+      "targets": [
+        { "expr": "mongodb_up", "refId": "A", "legendFormat": "up" }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "MongoDB Connections",
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "fillOpacity": 15, "drawStyle": "line", "lineWidth": 2, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "mongodb_ss_connections{conn_type=~\"current|active|available\"}",
+          "refId": "A",
+          "legendFormat": "{{conn_type}}"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "MongoDB Ops / sec",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "fillOpacity": 15, "drawStyle": "line", "lineWidth": 2, "showPoints": "never", "stacking": { "mode": "normal" } }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum by (legacy_op_type) (rate(mongodb_ss_opcounters[5m]))",
+          "refId": "A",
+          "legendFormat": "{{legacy_op_type}}"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "MongoDB Network",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": { "fillOpacity": 15, "drawStyle": "line", "lineWidth": 2, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "targets": [
+        { "expr": "rate(mongodb_ss_network_bytesIn[5m])", "refId": "A", "legendFormat": "in" },
+        { "expr": "rate(mongodb_ss_network_bytesOut[5m])", "refId": "B", "legendFormat": "out" }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "MongoDB Resident Memory",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "custom": { "fillOpacity": 15, "drawStyle": "line", "lineWidth": 2, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "mongodb_ss_mem_resident",
+          "refId": "A",
+          "legendFormat": "resident (MB)"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Documents in expensetracker DB",
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "fillOpacity": 15, "drawStyle": "line", "lineWidth": 2, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "mongodb_dbstats_objects{database=\"expensetracker\"}",
+          "refId": "A",
+          "legendFormat": "documents"
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["expense-tracker", "prometheus"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Expense Tracker Overview",
+  "uid": "expense-tracker-overview",
+  "version": 1
+}
