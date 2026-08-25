@@ -38,48 +38,33 @@ services:
     networks:
       - app_network
 
-  # ─── Monitoring Stack ────────────────────────────────────────────
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: expense_prometheus
+  jenkins:
+    build:
+      context: ./jenkins
+    image: expense-jenkins:latest
+    container_name: expense_jenkins
     ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    networks:
-      - app_network
-    depends_on:
-      - backend
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: expense_grafana
-    ports:
-      - "3001:3000" # Access Grafana at http://localhost:3001
+      - "8080:8080"
+      - "50000:50000"
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin # Change this!
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      - JENKINS_ADMIN_USER=${JENKINS_ADMIN_USER:-admin}
+      - JENKINS_ADMIN_PASS=${JENKINS_ADMIN_PASS:-admin}
+      - JENKINS_URL=${JENKINS_URL:-http://localhost:8080/}
+      - GIT_REPO_URL=${GIT_REPO_URL:-https://github.com/KangYan23/expensestracker.git}
+      - GIT_BRANCH=${GIT_BRANCH:-main}
+      - GIT_CREDENTIALS_ID=${GIT_CREDENTIALS_ID:-}
+      - EMAIL_RECIPIENT=${EMAIL_RECIPIENT:-}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_TLS=${SMTP_TLS:-true}
+      - SMTP_SSL=${SMTP_SSL:-false}
     volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - jenkins_home:/var/jenkins_home
     networks:
       - app_network
-    depends_on:
-      - prometheus
-
-  mongo-exporter:
-    image: percona/mongodb_exporter:0.40
-    container_name: expense_mongo_exporter
-    command:
-      - '--collect-all'
-      - '--mongodb.uri=mongodb://mongo:27017'
-    ports:
-      - "9216:9216"
-    networks:
-      - app_network
-    depends_on:
-      - mongo
 
 networks:
   app_network:
@@ -87,4 +72,4 @@ networks:
 
 volumes:
   mongo_data:
-  grafana_data:
+  jenkins_home:
