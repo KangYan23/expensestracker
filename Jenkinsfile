@@ -9,9 +9,9 @@ pipeline {
   }
 
   triggers {
-    // Local Jenkins has no public URL, so GitHub webhooks can't reach it.
-    // Poll the repo every 5 minutes; a push to `main` triggers the next build.
-    pollSCM('H/5 * * * *')
+    // GitHub sends a webhook to Jenkins the moment you push.
+    // Requires: ngrok tunnel + GitHub webhook pointing to http://<ngrok-url>/github-webhook/
+    githubPush()
   }
 
   environment {

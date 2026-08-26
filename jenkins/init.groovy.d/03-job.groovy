@@ -3,6 +3,7 @@
 import jenkins.model.*
 import hudson.plugins.git.*
 import hudson.triggers.*
+import com.cloudbees.jenkins.GitHubPushTrigger
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition
 
@@ -31,9 +32,9 @@ def scm = new GitSCM(
 )
 job.definition = new CpsScmFlowDefinition(scm, 'Jenkinsfile')
 
-// A local Jenkins can't receive GitHub webhooks (no public URL), so poll SCM every 5 min.
-if (job.getTriggers().isEmpty()) {
-    job.addTrigger(new SCMTrigger('H/5 * * * *'))
+// Trigger a build instantly whenever GitHub sends a push webhook.
+if (!job.getTriggers().containsKey(GitHubPushTrigger.class)) {
+    job.addTrigger(new GitHubPushTrigger())
 }
 job.save()
 println("Bootstrap: job '${jobName}' -> ${repoUrl} (branch ${branch})")
