@@ -29,7 +29,7 @@ pipeline {
     stage('Install Dependencies') {
       steps {
         sh 'cd backend  && npm ci --no-audit --no-fund'
-        sh 'cd frontend && npm ci --no-audit --no-fund'
+        sh 'cd frontend && npm ci --no-audit --no-fund --legacy-peer-deps'
       }
     }
 
